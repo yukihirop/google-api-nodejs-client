@@ -19,9 +19,11 @@ import {Utils} from './utils';
 
 function createNock(qs?: string) {
   const query = qs ? `?${qs}` : '';
-  return nock('https://datastore.googleapis.com')
-    .post(`/v1/projects/test-project-id:lookup${query}`)
-    .reply(200);
+  const baseUrl = 'https://datastore.googleapis.com';
+  const path = `/v1/projects/test-project-id:lookup${query}`;
+  // https://datastore.googleapis.com/v1/projects/test-project-id:lookup?projectId=test-project-id&myParam=12
+  console.log(baseUrl + path);
+  return nock(baseUrl).post(path).reply(200);
 }
 
 describe('Clients', () => {
@@ -114,9 +116,7 @@ describe('Clients', () => {
     });
     nock.disableNetConnect();
     createNock('myParam=123');
-    const res2 =
-      // tslint:disable-next-line no-any
-      await (datastore2 as any).projects.lookup({
+    const res2 = await datastore2.projects.lookup({
         projectId: 'test-project-id',
       });
     const query2 = Utils.getQs(res2) || '';
@@ -136,7 +136,7 @@ describe('Clients', () => {
     // Override the default datasetId param for this particular API call
     createNock('myParam=456');
     const res = await datastore.projects.lookup(
-      // tslint:disable-next-line no-any
+      // tslint:disable-next-line `no-any`
       {projectId: 'test-project-id', myParam: '456'} as any
     );
     // If the default param handling is broken, query might be undefined, thus
@@ -182,8 +182,9 @@ describe('Clients', () => {
       },
     });
     // No params given - only callback
-    createNock('myParam=123');
+    let scope = createNock('projectId=test-project-id&myParam=123');
     const res = await datastore.projects.lookup();
+    scope.done();
     // If the default param handling is broken, req or query might be
     // undefined, thus concealing the assertion message with some generic
     // "cannot call .indexOf of undefined"
@@ -207,9 +208,9 @@ describe('Clients', () => {
     nock.disableNetConnect();
 
     // No params given - only callback
-    createNock('myParam=123');
-    // tslint:disable-next-line no-any
-    const res3 = await (datastore2 as any).projects.lookup();
+    scope = createNock('myParam=123');
+    const res3 = await datastore.projects.lookup();
+    scope.done();
     // If the default param handling is broken, req or query might be
     // undefined, thus concealing the assertion message with some
     // generic "cannot call .indexOf of undefined"
