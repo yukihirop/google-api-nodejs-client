@@ -2,7 +2,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "google-auth-library": "^4.0.0",
-    "googleapis-common": "^2.0.2"
+    "googleapis-common": "git+https://github.com/yukihirop/nodejs-googleapis-common#fix_using_promisify"
   },
   "files": [
     "build/src",
